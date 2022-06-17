@@ -32,10 +32,11 @@ def create_app(test_config=None):
     """
     @TODO: Use the after_request decorator to set Access-Control-Allow
     """
+
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
-        # response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response
 
@@ -44,6 +45,7 @@ def create_app(test_config=None):
     Create an endpoint to handle GET requests
     for all available categories.
     """
+
     @app.route('/categories')
     def get_categories():
         categories = Category.query.order_by(Category.type).all()
@@ -54,19 +56,6 @@ def create_app(test_config=None):
             'categories': {category.id: category.type for category in categories}
         })
 
-    """
-    @TODO:
-    Create an endpoint to handle GET requests for questions,
-    including pagination (every 10 questions).
-    This endpoint should return a list of questions,
-    number of total questions, current category, categories.
-    
-
-    TEST: At this point, when you start the application
-    you should see questions and categories generated,
-    ten questions per page and pagination at the bottom of the screen for three pages.
-    Clicking on the page numbers should update the questions.
-    """
     @app.route('/questions')
     def retrieve_questions():
         questions = Question.query.order_by(Question.id).all()
@@ -84,7 +73,6 @@ def create_app(test_config=None):
             "categories": [category.type for category in categories]
         })
 
-
     """
     @TODO:
     Create an endpoint to DELETE question using a question ID.
@@ -92,6 +80,7 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
+
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
         try:
@@ -126,7 +115,7 @@ def create_app(test_config=None):
         new_category = body.get('category', None)
         search = body.get('searchTerm', None)
         try:
-            if search:
+            if search is not None:
                 questions = Question.query.filter(Question.question.ilike('%{}%'.format(search))).all()
                 current_questions = [question.format() for question in questions]
                 return jsonify({
@@ -137,16 +126,11 @@ def create_app(test_config=None):
             question = Question(question=new_question, answer=new_answer,
                                 category=new_category, difficulty=new_difficulty)
             question.insert()
-            selection = Question.query.order_by(Question.id).all()
-            current_questions = paginate_questions(request, selection)
             return jsonify({
-                "success": True,
-                "questions": current_questions,
-                "total_questions": len(selection)
+                "success": True
             })
         except:
             abort(422)
-
 
     """
     @TODO:
@@ -167,8 +151,11 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     """
+
     @app.route('/categories/<int:category_id>/questions')
     def get_questions_by_category(category_id):
+        # adding 1 to the category id because frontend start category from 0 instead of 1
+        category_id = category_id + 1
         current_category = Category.query.filter(Category.id == category_id).one_or_none()
         if current_category is None:
             abort(404)
@@ -181,8 +168,7 @@ def create_app(test_config=None):
             "success": True,
             "questions": current_questions,
             "total_questions": total_questions,
-            "current_category": current_category.type,
-            # "categories": [category.format() for category in Category.query.all()]
+            "current_category": current_category.type
         })
 
     """
@@ -210,7 +196,8 @@ def create_app(test_config=None):
             else:
                 questions = Question.query.filter(
                     Question.id.notin_(previous_questions),
-                    Question.category == category_id).all()
+                    Question.category == category_id
+                ).all()
             question = None
             if questions:
                 question = random.choice(questions)
