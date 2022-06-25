@@ -4,7 +4,7 @@ import Question from './Question';
 import Search from './Search';
 import $ from 'jquery';
 
-const BASE_URL = 'http://localhost:5000'
+const BASE_URL = process.env.REACT_APP_BASE_URL
 class QuestionView extends Component {
   constructor() {
     super();

@@ -3,7 +3,7 @@ import $ from 'jquery';
 import '../stylesheets/QuizView.css';
 
 const questionsPerPlay = 5;
-const BASE_URL = 'http://localhost:5000'
+const BASE_URL = process.env.REACT_APP_BASE_URL
 
 class QuizView extends Component {
   constructor(props) {
